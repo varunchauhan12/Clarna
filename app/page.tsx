@@ -6,14 +6,22 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [value, setValue] = useState("");
   const trpc = useTRPC();
   const { data } = useQuery(trpc.messages.getMany.queryOptions());
-  const createMessage = useMutation(
-    trpc.messages.create.mutationOptions({
-      onSuccess: () => toast.success("Message created"),
+  const createProject = useMutation(
+    trpc.projects.create.mutationOptions({
+      onError: (err) => {
+        toast.error(err.message);
+      },
+      onSuccess: (data) => {
+        toast.success("Project created successfully");
+        router.push(`/project/${data.id}`);
+      },
     }),
   );
 
@@ -21,8 +29,8 @@ export default function Home() {
     <div className={"p-4 mx-auto"}>
       <Input value={value} onChange={(e) => setValue(e.target.value)} />
       <Button
-        disabled={createMessage.isPending}
-        onClick={() => createMessage.mutate({ value: value })}
+        disabled={createProject.isPending}
+        onClick={() => createProject.mutate({ value: value })}
       >
         Invoke inngest
       </Button>
