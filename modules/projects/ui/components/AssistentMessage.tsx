@@ -2,6 +2,7 @@ import { Fragment, type } from "@/lib/generated/prisma";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Image from "next/image";
+import FragmentCard from "@/modules/projects/ui/components/FragmentCard";
 
 interface AssistentMessageProps {
   content: string;
