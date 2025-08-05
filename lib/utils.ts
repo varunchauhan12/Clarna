@@ -24,6 +24,7 @@ export function convertFilesToTreeItems(files: {
       if (!current[part]) {
         current[part] = {};
       }
+      current = current[part];
     }
 
     const fileName = parts[parts.length - 1];
