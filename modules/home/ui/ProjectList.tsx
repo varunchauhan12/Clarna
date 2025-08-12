@@ -29,7 +29,7 @@ const ProjectList = () => {
             variant={"outline"}
             className={"font-normal h-auto justify-start w-full text-start p-4"}
           >
-            <Link href={`/projects/${project.id}`}>
+            <Link href={`/project/${project.id}`}>
               <div className={"flex items-center gap-x-4"}>
                 <Image
                   src={"/logo.svg"}
