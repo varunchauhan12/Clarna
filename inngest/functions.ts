@@ -5,6 +5,8 @@ import {
   createTool,
   createNetwork,
   type Tool,
+  type Message,
+  createState,
 } from "@inngest/agent-kit";
 import { Sandbox } from "@e2b/code-interpreter";
 import { getSandbox, lastAssistantMessage } from "@/inngest/utils";
@@ -25,6 +27,38 @@ export const codeAgentFunction = inngest.createFunction(
       const sandbox = await Sandbox.create("Clarna-nextjs-test2");
       return sandbox.sandboxId;
     });
+    const previousMessages = await step.run(
+      "get-previous-messages",
+      async () => {
+        const formattedMessages: Message[] = [];
+        const messages = await prisma.message.findMany({
+          where: {
+            projectId: event.data.projectId,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+        for (const message of messages) {
+          formattedMessages.push({
+            type: "text",
+            role: message.role === "ASSISTANT" ? "assistant" : "user",
+            content: message.content,
+          });
+        }
+        return formattedMessages;
+      },
+    );
+
+    const state = createState<AgentState>(
+      {
+        summary: "",
+        files: {},
+      },
+      {
+        messages: previousMessages,
+      },
+    );
 
     const codingAgent = createAgent<AgentState>({
       name: "coding-agent",
@@ -162,6 +196,7 @@ export const codeAgentFunction = inngest.createFunction(
       name: "coding-agent-network",
       agents: [codingAgent],
       maxIter: 15,
+      defaultState: state,
       router: async ({ network }) => {
         const summary = network.state.data.summary;
         if (summary) {
@@ -171,7 +206,7 @@ export const codeAgentFunction = inngest.createFunction(
       },
     });
 
-    const result = await network.run(event.data.value);
+    const result = await network.run(event.data.value, { state });
 
     const isError =
       !result.state.data.summary ||
